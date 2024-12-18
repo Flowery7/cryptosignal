@@ -416,21 +416,28 @@ fetchApiKey().then(apiKey => {
     }
 
     function generateSignal(crypto) {
-        const prices = pricesHistory[crypto];
-        if (prices.length < Math.max(emaLongPeriod, rsiPeriod)) return null;
+    const prices = pricesHistory[crypto];
+    if (prices.length < Math.max(emaLongPeriod, rsiPeriod)) return null;
 
-        const emaShort = calculateEMA(prices, emaShortPeriod);
-        const emaLong = calculateEMA(prices, emaLongPeriod);
-        const rsi = calculateRSI(prices, rsiPeriod);
+    const emaShort = calculateEMA(prices, emaShortPeriod);
+    const emaLong = calculateEMA(prices, emaLongPeriod);
+    const rsi = calculateRSI(prices, rsiPeriod);
 
-        const currentRSI = rsi[rsi.length - 1];
-        const shortEMA = emaShort[emaShort.length - 1];
-        const longEMA = emaLong[emaLong.length - 1];
+    const currentRSI = rsi[rsi.length - 1];
+    const shortEMA = emaShort[emaShort.length - 1];
+    const longEMA = emaLong[emaLong.length - 1];
 
-        if (shortEMA > longEMA && currentRSI < rsiOversold) return 'BUY';
-        if (shortEMA < longEMA && currentRSI > rsiOverbought) return 'SELL';
-        return null;
+    if (shortEMA > longEMA && currentRSI < rsiOversold) {
+        return `BUY - Short EMA (${shortEMA.toFixed(2)}) crossed above Long EMA (${longEMA.toFixed(2)}) and RSI (${currentRSI.toFixed(2)}) indicates oversold conditions.`;
     }
+
+    if (shortEMA < longEMA && currentRSI > rsiOverbought) {
+        return `SELL - Short EMA (${shortEMA.toFixed(2)}) crossed below Long EMA (${longEMA.toFixed(2)}) and RSI (${currentRSI.toFixed(2)}) indicates overbought conditions.`;
+    }
+
+    return null;
+}
+
 
     function addSignal(message) {
         const signalList = document.getElementById('signals-list');
