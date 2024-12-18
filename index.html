@@ -431,6 +431,64 @@ const macdSignalPeriod = 9; // Signal line period
         return rsi;
     }
 
+
+
+
+
+function calculateBollingerBands(prices, period, stdDevMultiplier) {
+    if (prices.length < period) return null;
+
+    const sma = calculateSMA(prices, period);
+    const bands = [];
+
+    for (let i = 0; i <= prices.length - period; i++) {
+        const slice = prices.slice(i, i + period);
+        const mean = slice.reduce((sum, price) => sum + price, 0) / period;
+        const variance = slice.reduce((sum, price) => sum + Math.pow(price - mean, 2), 0) / period;
+        const stdDev = Math.sqrt(variance);
+
+        bands.push({
+            upper: mean + stdDevMultiplier * stdDev,
+            lower: mean - stdDevMultiplier * stdDev,
+            middle: mean,
+        });
+    }
+
+    return bands;
+}
+
+function calculateMACD(prices, shortPeriod, longPeriod, signalPeriod) {
+    if (prices.length < longPeriod) return null;
+
+    const shortEMA = calculateEMA(prices, shortPeriod);
+    const longEMA = calculateEMA(prices, longPeriod);
+    const macdLine = shortEMA.map((value, index) => value - longEMA[index]).slice(longPeriod - shortPeriod);
+    const signalLine = calculateEMA(macdLine, signalPeriod);
+    const histogram = macdLine.map((value, index) => value - signalLine[index]);
+
+    return { macdLine, signalLine, histogram };
+}
+
+function calculateSMA(prices, period) {
+    if (prices.length < period) return [];
+    const sma = [];
+
+    for (let i = 0; i <= prices.length - period; i++) {
+        const slice = prices.slice(i, i + period);
+        const mean = slice.reduce((sum, price) => sum + price, 0) / period;
+        sma.push(mean);
+    }
+
+    return sma;
+}
+
+
+
+
+
+
+    
+
     function generateSignal(crypto) {
     const prices = pricesHistory[crypto];
     if (prices.length < Math.max(emaLongPeriod, rsiPeriod)) return null;
