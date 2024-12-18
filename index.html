@@ -487,30 +487,60 @@ function calculateSMA(prices, period) {
 
 
 
-    
+function generateSignal(crypto) {
+    const prices = pricesHistory[crypto].map(Number); // Ensure prices are numbers
+    if (prices.length < Math.max(macdLongPeriod, smaPeriod, rsiPeriod)) return null;
 
-    function generateSignal(crypto) {
-    const prices = pricesHistory[crypto];
-    if (prices.length < Math.max(emaLongPeriod, rsiPeriod)) return null;
-
+    // EMA for existing logic
     const emaShort = calculateEMA(prices, emaShortPeriod);
     const emaLong = calculateEMA(prices, emaLongPeriod);
-    const rsi = calculateRSI(prices, rsiPeriod);
 
+    // RSI
+    const rsi = calculateRSI(prices, rsiPeriod);
     const currentRSI = rsi[rsi.length - 1];
+
+    // Bollinger Bands
+    const bollingerBands = calculateBollingerBands(prices, smaPeriod, bollingerStdDev);
+    const currentBands = bollingerBands ? bollingerBands[bollingerBands.length - 1] : null;
+
+    // MACD
+    const macd = calculateMACD(prices, macdShortPeriod, macdLongPeriod, macdSignalPeriod);
+    const currentMACD = macd ? macd.macdLine[macd.macdLine.length - 1] : null;
+    const currentSignal = macd ? macd.signalLine[macd.signalLine.length - 1] : null;
+
     const shortEMA = emaShort[emaShort.length - 1];
     const longEMA = emaLong[emaLong.length - 1];
 
+    // Bollinger Bands Signal
+    if (currentBands && prices[prices.length - 1] > currentBands.upper) {
+        return `SELL - Price (${prices[prices.length - 1].toFixed(2)}) is above the upper Bollinger Band (${currentBands.upper.toFixed(2)}).`;
+    }
+    if (currentBands && prices[prices.length - 1] < currentBands.lower) {
+        return `BUY - Price (${prices[prices.length - 1].toFixed(2)}) is below the lower Bollinger Band (${currentBands.lower.toFixed(2)}).`;
+    }
+
+    // MACD Signal
+    if (currentMACD > currentSignal) {
+        return `BUY - MACD Line (${currentMACD.toFixed(2)}) crossed above Signal Line (${currentSignal.toFixed(2)}).`;
+    }
+    if (currentMACD < currentSignal) {
+        return `SELL - MACD Line (${currentMACD.toFixed(2)}) crossed below Signal Line (${currentSignal.toFixed(2)}).`;
+    }
+
+    // EMA and RSI Signal
     if (shortEMA > longEMA && currentRSI < rsiOversold) {
         return `BUY - Short EMA (${shortEMA.toFixed(2)}) crossed above Long EMA (${longEMA.toFixed(2)}) and RSI (${currentRSI.toFixed(2)}) indicates oversold conditions.`;
     }
-
     if (shortEMA < longEMA && currentRSI > rsiOverbought) {
         return `SELL - Short EMA (${shortEMA.toFixed(2)}) crossed below Long EMA (${longEMA.toFixed(2)}) and RSI (${currentRSI.toFixed(2)}) indicates overbought conditions.`;
     }
 
     return null;
 }
+
+
+
+  
 
 
     function addSignal(message) {
