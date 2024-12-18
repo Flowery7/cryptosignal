@@ -158,7 +158,20 @@
 
 <!-- JavaScript to fetch crypto prices, handle charts, and alerts -->
 <script>
-    const apiKey = 'xxxxxxxxx'; // Your API Key here
+    // Placeholder to retrieve API key securely
+    const apiKey = fetchApiKey();
+    async function fetchApiKey() {
+    const response = await fetch('/api/get-api-key'); // Backend endpoint
+    const data = await response.json();
+    return data.apiKey;
+}
+
+// Example of using the API key
+fetchApiKey().then(apiKey => {
+    console.log("API Key:", apiKey);
+    // Use the API key in your logic
+});
+
     const cryptocurrencies = ['bitcoin', 'ethereum', 'solana', 'dogecoin', 'cardano', 'xrp'];
     const pricesHistory = {};
     const timeLabels = {};
