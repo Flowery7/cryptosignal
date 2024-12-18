@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crypto Tracker</title>
+<!-- Bootstrap CSS for styling -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Chart.js for graphs -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Custom CSS -->
+<style>
+    /* Cyberpunk Style */
+    body {
+        background: linear-gradient(135deg, #020202, #0d0d1f);
+        color: #f0f0f0;
+        font-family: 'Orbitron', 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+    .navbar {
+        background: rgba(0, 0, 0, 0.9);
+        border-bottom: 2px solid #1af5ff;
+        box-shadow: 0 0 15px #1af5ff;
+    }
+    .navbar-brand, .nav-link {
+        color: #1af5ff !important;
+        font-family: 'Orbitron', 'Arial', sans-serif;
+        font-size: 18px;
+        text-shadow: 0 0 8px #1af5ff;
+    }
+    .navbar-brand:hover, .nav-link:hover {
+        color: #ff3cac !important;
+        text-shadow: 0 0 8px #ff3cac;
+    }
+    .container {
+        margin-top: 30px;
+    }
+    .crypto-card {
+        background: rgba(0, 0, 0, 0.8);
+        border: 2px solid #1af5ff;
+        border-radius: 15px;
+        padding: 15px;
+        box-shadow: 0 0 15px #1af5ff, 0 0 30px #1af5ff inset;
+        margin-bottom: 20px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .crypto-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0 25px #e91e63, 0 0 50px #e91e63 inset;
+    }
+    .crypto-name {
+        font-size: 24px;
+        font-weight: bold;
+        color: #ff3cac;
+        text-shadow: 0 0 8px #ff3cac, 0 0 15px #ff3cac;
+    }
+    .crypto-price {
+        font-size: 20px;
+        margin-top: 10px;
+        color: #1af5ff;
+        text-shadow: 0 0 6px #1af5ff;
+    }
+    .signal-alerts {
+        background: rgba(29, 29, 39, 0.95);
+        border: 2px solid #ff9f1c;
+        border-radius: 15px;
+        padding: 15px;
+        box-shadow: 0 0 20px #ff9f1c, 0 0 40px #ff9f1c inset;
+        margin-top: 20px;
+    }
+    .signal-alerts h4 {
+        font-family: 'Orbitron', 'Arial', sans-serif;
+        font-size: 28px;
+        color: #ff9f1c;
+        text-shadow: 0 0 8px #ff9f1c, 0 0 15px #ff9f1c;
+    }
+    canvas {
+        background-color: #131313;
+        border-radius: 15px;
+        padding: 20px;
+        margin-top: 15px;
+        box-shadow: 0 0 15px #1af5ff, 0 0 25px #1af5ff inset;
+    }
+    @media (max-width: 768px) {
+        .crypto-name {
+            font-size: 20px;
+        }
+        .crypto-price {
+            font-size: 18px;
+        }
+        .signal-alerts h4 {
+            font-size: 24px;
+        }
+       
+       
+       
+       
+
+
+
+
+
+    }
+</style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Crypto Signals</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon" style="color: #1af5ff;"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#crypto-container">Cryptos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#signal-alerts">Signals</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="pricehistory.html">Price History</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+
+
+
+
+
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="row" id="crypto-container">
+            <!-- Crypto cards with charts will be dynamically added here -->
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12 signal-alerts" id="signal-alerts">
+                <h4>Crypto Buy/Sell Signals</h4>
+                <ul id="signals-list">
+                    <!-- Buy/Sell signals will be dynamically added here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+<!-- JavaScript to fetch crypto prices, handle charts, and alerts -->
+<script>
+    const apiKey = 'xxxxxxxxx'; // Your API Key here
+    const cryptocurrencies = ['bitcoin', 'ethereum', 'solana', 'dogecoin', 'cardano', 'xrp'];
+    const pricesHistory = {};
+    const timeLabels = {};
+    const lastSignalTimes = {};
+    const fetchInterval = 10 * 60000; // Fetch price every 60 seconds
+    const signalCooldown = 30 * 60 * 1000; // 30 minutes in milliseconds
+    const emaShortPeriod = 5; // Short EMA period
+    const emaLongPeriod = 10; // Long EMA period
+    const rsiPeriod = 14; // RSI period
+    const rsiOverbought = 70; // RSI overbought threshold
+    const rsiOversold = 30; // RSI oversold threshold;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        cryptocurrencies.forEach((crypto) => {
+            pricesHistory[crypto] = [];
+            timeLabels[crypto] = [];
+            lastSignalTimes[crypto] = null;
+
+            initializeCryptoCard(crypto);
+            fetchCryptoPrice(crypto);
+            setInterval(() => {
+                fetchCryptoPrice(crypto);
+                generateAndCheckSignals(crypto);
+            }, fetchInterval);
+        });
+    });
+
+    function fetchCryptoPrice(crypto) {
+        fetch(`https://api.coincap.io/v2/assets/${crypto}`)
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch price for ${crypto}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then((data) => {
+                if (data?.data?.priceUsd) {
+                    const price = parseFloat(data.data.priceUsd).toFixed(2);
+                    pricesHistory[crypto].push(price);
+                    timeLabels[crypto].push(getCurrentTime());
+                    updateCryptoCard(crypto, price);
+                    updateChart(crypto);
+                } else {
+                    console.error(`Invalid price data received for ${crypto}`);
+                }
+            })
+            .catch((error) => console.error(`Error fetching ${crypto} price:`, error));
+    }
+
+    function initializeCryptoCard(crypto) {
+        const cryptoContainer = document.getElementById('crypto-container');
+
+        const cryptoCard = document.createElement('div');
+        cryptoCard.className = 'col-md-6 crypto-card';
+        cryptoCard.id = `${crypto}-card`;
+        cryptoCard.innerHTML = `
+            <div class="crypto-name">${capitalize(crypto)}</div>
+            <div class="crypto-price" id="${crypto}-price"></div>
+            <canvas id="${crypto}-chart"></canvas>
+        `;
+        cryptoContainer.appendChild(cryptoCard);
+
+        const ctx = document.getElementById(`${crypto}-chart`).getContext('2d');
+        window[`${crypto}Chart`] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timeLabels[crypto],
+                datasets: [
+                    {
+                        label: `${capitalize(crypto)} Price`,
+                        data: pricesHistory[crypto],
+                        fill: false,
+                        borderColor: getRandomColor(),
+                        tension: 0.1,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { color: '#fff' },
+                    },
+                },
+                scales: {
+                    x: { ticks: { color: '#fff' } },
+                    y: { beginAtZero: false, ticks: { color: '#fff' } },
+                },
+            },
+        });
+    }
+
+    function updateCryptoCard(crypto, price) {
+        const priceElement = document.getElementById(`${crypto}-price`);
+        if (priceElement) {
+            priceElement.textContent = `$${price} USD`;
+        }
+    }
+
+    function updateChart(crypto) {
+        const chart = window[`${crypto}Chart`];
+        if (chart) {
+            chart.data.labels = timeLabels[crypto];
+            chart.data.datasets[0].data = pricesHistory[crypto];
+            chart.update();
+        }
+    }
+
+    function generateAndCheckSignals(crypto) {
+        const signal = generateSignal(crypto);
+        if (signal) {
+            const now = Date.now();
+            if (!lastSignalTimes[crypto] || now - lastSignalTimes[crypto] > signalCooldown) {
+                addSignal(`${capitalize(crypto)} Signal: ${signal}`);
+                lastSignalTimes[crypto] = now;
+            }
+        }
+    }
+
+    function calculateEMA(prices, period) {
+        const k = 2 / (period + 1);
+        let ema = [];
+        let prevEMA = prices[0];
+
+        prices.forEach((price, index) => {
+            if (index === 0) {
+                ema.push(prevEMA);
+            } else {
+                prevEMA = price * k + prevEMA * (1 - k);
+                ema.push(prevEMA);
+            }
+        });
+
+        return ema;
+    }
+
+    function calculateRSI(prices, period) {
+        let gains = 0;
+        let losses = 0;
+        let rsi = [];
+
+        for (let i = 1; i < prices.length; i++) {
+            const change = prices[i] - prices[i - 1];
+            if (change > 0) gains += change;
+            else losses -= change;
+
+            if (i >= period) {
+                const avgGain = gains / period;
+                const avgLoss = losses / period;
+                const rs = avgGain / avgLoss || 0;
+                rsi.push(100 - 100 / (1 + rs));
+
+                const prevChange = prices[i - period] - prices[i - period - 1];
+                if (prevChange > 0) gains -= prevChange;
+                else losses += prevChange;
+            }
+        }
+
+        return rsi;
+    }
+
+    function generateSignal(crypto) {
+        const prices = pricesHistory[crypto];
+        if (prices.length < Math.max(emaLongPeriod, rsiPeriod)) return null;
+
+        const emaShort = calculateEMA(prices, emaShortPeriod);
+        const emaLong = calculateEMA(prices, emaLongPeriod);
+        const rsi = calculateRSI(prices, rsiPeriod);
+
+        const currentRSI = rsi[rsi.length - 1];
+        const shortEMA = emaShort[emaShort.length - 1];
+        const longEMA = emaLong[emaLong.length - 1];
+
+        if (shortEMA > longEMA && currentRSI < rsiOversold) return 'BUY';
+        if (shortEMA < longEMA && currentRSI > rsiOverbought) return 'SELL';
+        return null;
+    }
+
+    function addSignal(message) {
+        const signalList = document.getElementById('signals-list');
+        const listItem = document.createElement('li');
+        listItem.textContent = `${message} - Time: ${getCurrentTime()}`;
+        listItem.className = 'alert alert-info mt-2';
+        signalList.appendChild(listItem);
+    }
+
+    function getCurrentTime() {
+        return new Date().toLocaleTimeString();
+    }
+
+    function capitalize(word) {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+    }
+
+    function getRandomColor() {
+        const letters = '0123456789ABCDEF';
+        let color = '#';
+        for (let i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    }
+</script>
+
+
+           
+           
+           
+           
+            <section id="risks" class="mt-5 p-4 text-white" style="background: linear-gradient(135deg, #2d0036, #540d6e); border-radius: 15px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.9);">
+    <h2 class="text-center" style="font-family: 'Orbitron', sans-serif; font-size: 28px; color: #ff007f;">Trading Risks & Disclaimer</h2>
+    <p style="font-size: 16px; line-height: 1.6; font-family: 'Roboto', sans-serif;">
+        Trading cryptocurrencies, including Bitcoin, involves significant risks. Prices are highly volatile and can change rapidly, leading to potential losses.
+        The buy/sell signals provided on this website are based on mathematical strategies and algorithms. These signals are purely for informational purposes
+        and should not be construed as financial advice. <br><br>
+        The creator of this website and its content cannot be held responsible for any losses incurred. It is strongly recommended to perform your own research
+        and consult a professional financial advisor before making any trading decisions. All trades are undertaken at your own risk. <br> <br> Signal indicators like RSI (Relative Strength Index), MACD (Moving Average Convergence Divergence), Bollinger Bands, and SMA (Simple Moving Average) are used in technical analysis to evaluate market trends and make trading decisions. RSI measures the speed and change of price movements, indicating overbought or oversold conditions to help traders identify potential reversal points. MACD analyzes the relationship between two moving averages to signal momentum changes, offering insights into bullish or bearish trends. Bollinger Bands assess price volatility by creating a band around a moving average, which helps identify periods of high or low volatility and potential breakout points. SMA smoothens price data over a specific time frame, providing a clearer view of the underlying trend by reducing noise. These calculations enable traders to make informed decisions based on historical price patterns, aiding in risk management and strategy development.<br><br> This code monitors cryptocurrency prices (Bitcoin, Ethereum, Solana, Dogecoin, Cardano, and XRP) in real-time, using data fetched every 10 seconds. It generates trading signals based on technical indicators like RSI (relative strength index), MACD (moving average convergence divergence), Bollinger Bands, and SMA (simple moving average). For example, if the RSI suggests oversold conditions (below 30), the MACD shows a bullish crossover, or the price drops below the lower Bollinger Band, a signal is triggered. These indicators help users identify potential buying or selling opportunities by analyzing price trends and momentum. Signals include details like the specific indicator and timestamp, allowing users to make informed decisions.
+    </p>
+    <div class="text-center mt-4">
+        <a href="#" class="btn btn-outline-light" style="font-family: 'Orbitron', sans-serif; font-size: 18px; color: #00ffff; border-color: #00ffff; box-shadow: 0 0 10px #00ffff;">
+            Donate Crypto
+        </a>
+    </div>
+</section>
+           
+          
+          
+          
+           
+            
+
+    <!-- Footer -->
+    <footer class="text-center mt-5" id="contact">
+        <p style="color: #1af5ff; text-shadow: 0 0 8px #1af5ff;">© 2024 Crypto Tracker | Designed in Cyberpunk Style</p>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
