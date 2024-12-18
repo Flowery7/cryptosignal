@@ -118,12 +118,7 @@
        
        
        
-       
-
-
-
-
-
+    
     }
 </style>
 </head>
@@ -162,9 +157,26 @@
         Here is website which is build to give you free signals for a few selected crypto's. This project is created and supported by donations from it's users. If you find value from the website please consider supporting the creator by making a donation. <br><br>
         The creator of this website and its content cannot be held responsible for any losses incurred. 
     <div class="text-center mt-4">
-        <a href="#" class="btn btn-outline-light" style="font-family: 'Orbitron', sans-serif; font-size: 18px; color: #00ffff; border-color: #00ffff; box-shadow: 0 0 10px #00ffff;">
-            Donate Crypto
-        </a>
+        <!-- Cryptocurrency Donation Button -->
+  <button onclick="copyAddressToClipboard()">
+    Donate Bitcoin (BTC)
+  </button>
+
+  <p id="address" style="display:none;">
+    bc1qjzp98akl508h863ya0d9ucdc7hspptgq2zcg4m
+  </p>
+  <p><small>Click the button to copy our Bitcoin wallet address to your clipboard.</small></p>
+
+  <script>
+    function copyAddressToClipboard() {
+      var address = document.getElementById('address').innerText;
+      navigator.clipboard.writeText(address).then(function() {
+        alert("Wallet address copied to clipboard. Please send your donation.");
+      }, function(err) {
+        console.error('Unable to copy address: ', err);
+      });
+    }
+  </script>
     </div>
 </section>
 
