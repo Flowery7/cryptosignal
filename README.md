@@ -1,1 +1,1 @@
-Tester
+This runs daily data points and is updated live it is built for day traders , it is intended as a site to be visited and left open for several hours. Updates will improve the user experience. It is intended to add signal notification options. Via email or SMS. 
