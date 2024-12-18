@@ -152,10 +152,10 @@
 
 
  <section id="risks" class="mt-5 p-4 text-white" style="background: linear-gradient(135deg, #2d0036, #540d6e); border-radius: 15px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.9);">
-    <h2 class="text-center" style="font-family: 'Orbitron', sans-serif; font-size: 28px; color: #ff007f;">Trade at your own risk.</h2>
+    <h2 class="text-center" style="font-family: 'Orbitron', sans-serif; font-size: 28px; color: #ff007f;">FREE day trade signals.</h2>
     <p style="font-size: 16px; line-height: 1.6; font-family: 'Roboto', sans-serif;">
-        Here is website which is build to give you free signals for a few selected crypto's based on prices every 20 secs. This project is created and supported by donations from it's users. If you find value from the website please consider supporting the creator by making a donation. <br><br>
-        The creator of this website and its content cannot be held responsible for any losses incurred. The website is also under development and some functions may not be fully operational. Updates are daily.
+        Here is website which is build to give you free signals for a few selected crypto's based on prices every 30 secs.<br><br> This project is created and supported by donations from it's users. If you find value from the website please consider supporting the creator by making a donation. <br><br>
+        The creator of this website and its content cannot be held responsible for any losses incurred. For more info please see disclaimer. <br> <br>The website is also under development and some functions may not be fully operational. Updates are daily.
     <div class="text-center mt-4">
         <!-- Cryptocurrency Donation Button -->
   <button onclick="copyAddressToClipboard()">
@@ -254,16 +254,32 @@ fetchApiKey().then(apiKey => {
 });
 
     const cryptocurrencies = ['bitcoin', 'ethereum', 'solana', 'dogecoin', 'cardano', 'xrp'];
-    const pricesHistory = {};
-    const timeLabels = {};
-    const lastSignalTimes = {};
-    const fetchInterval = 10 * 2000; // Fetch price every 60 seconds
-    const signalCooldown = 30 * 60 * 1000; // 30 minutes in milliseconds
-    const emaShortPeriod = 5; // Short EMA period
-    const emaLongPeriod = 10; // Long EMA period
-    const rsiPeriod = 14; // RSI period
-    const rsiOverbought = 70; // RSI overbought threshold
-    const rsiOversold = 30; // RSI oversold threshold;
+const pricesHistory = {};
+const timeLabels = {};
+const lastSignalTimes = {};
+
+// Fetch and signal cooldown intervals
+const fetchInterval = 10 * 1000; // Fetch price every 10 seconds
+const signalCooldown = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+// Moving Average periods
+const emaShortPeriod = 3; // Short EMA period
+const emaLongPeriod = 7; // Long EMA period
+const smaPeriod = 20; // SMA period for Bollinger Bands
+
+// RSI parameters
+const rsiPeriod = 6;
+const rsiOverbought = 80;
+const rsiOversold = 20;
+
+// Bollinger Bands parameters
+const bollingerStdDev = 2; // Standard deviation for bands
+
+// MACD parameters
+const macdShortPeriod = 12; // Short EMA period for MACD
+const macdLongPeriod = 26; // Long EMA period for MACD
+const macdSignalPeriod = 9; // Signal line period
+
 
     document.addEventListener('DOMContentLoaded', () => {
         cryptocurrencies.forEach((crypto) => {
